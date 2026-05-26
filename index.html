@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sourabh — Health Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--text:#e2e8f0;--muted:#8892b0;--muted2:#4a5270;--blue:#4f8ef7;--green:#34d399;--red:#f87171;--yellow:#fbbf24;--purple:#a78bfa;--orange:#fb923c;--teal:#2dd4bf;--pink:#f472b6;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;}
+header{position:relative;background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.logo{display:flex;align-items:center;gap:10px;}.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.logo h1{font-size:17px;font-weight:600;}.logo p{font-size:11px;color:var(--muted);margin-top:1px;}
+.badges{display:flex;gap:6px;flex-wrap:wrap;}.badge{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid;}
+.bw{border-color:#4f8ef755;color:var(--blue);background:#4f8ef710;}.br{border-color:#a78bfa55;color:var(--purple);background:#a78bfa10;}.bs{border-color:#fb923c55;color:var(--orange);background:#fb923c10;}
+.badge{cursor:pointer;transition:all .15s;user-select:none;}.badge:hover{opacity:.85;}
+.badge.active.bw{background:#4f8ef7;color:#fff;border-color:#4f8ef7;}
+.badge.active.br{background:#a78bfa;color:#fff;border-color:#a78bfa;}
+.badge.active.bs{background:#fb923c;color:#fff;border-color:#fb923c;}
+[data-src].src-hidden{opacity:.08;pointer-events:none;filter:grayscale(1);}
+[data-src].src-visible{opacity:1;}
+.updated{font-size:11px;color:var(--muted2);}
+.filters{padding:14px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border);}
+.fl{font-size:12px;color:var(--muted);margin-right:2px;}.fb{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;}
+.fb:hover{border-color:var(--blue);color:var(--text);}.fb.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:500;}
+.main{padding:20px 24px 40px;}
+.sec{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:24px 0 12px;display:flex;align-items:center;gap:8px;}
+.sec::after{content:'';flex:1;height:1px;background:var(--border);}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;margin-bottom:4px;}
+.kcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;position:relative;overflow:hidden;}
+.kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kb::before{background:var(--blue);}.kg::before{background:var(--green);}.ko::before{background:var(--orange);}.kp::before{background:var(--purple);}.kt::before{background:var(--teal);}.ky::before{background:var(--yellow);}.kr::before{background:var(--red);}.kpi::before{background:var(--pink);}
+.klbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+.kval{font-size:26px;font-weight:700;line-height:1;}.kunit{font-size:12px;color:var(--muted);margin-left:2px;font-weight:400;}
+.ktrend{display:flex;align-items:center;gap:4px;margin-top:5px;font-size:11px;}.tg{color:var(--green);}.tr{color:var(--red);}.tn{color:var(--muted);}
+.ksub{font-size:10px;color:var(--muted2);margin-top:3px;}
+.srow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px;}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.stitle{font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;}.dg{background:var(--green);}.dy{background:var(--yellow);}
+.si{display:flex;align-items:flex-start;gap:9px;margin-bottom:9px;font-size:12px;}.si-icon{font-size:14px;margin-top:1px;flex-shrink:0;}
+.si strong{display:block;font-weight:500;margin-bottom:1px;}.si span{color:var(--muted);font-size:11px;line-height:1.4;}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:12px;}
+.cgrid.trio{grid-template-columns:repeat(3,1fr);}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}.cc.full{grid-column:1/-1;}
+.ctitle{font-size:13px;font-weight:600;margin-bottom:2px;}.csub{font-size:11px;color:var(--muted);margin-bottom:14px;}
+.cw{position:relative;height:210px;}.cw.tall{height:250px;}.cw.sm{height:175px;}
+@media(max-width:800px){.cgrid,.cgrid.trio,.srow,.kgrid{grid-template-columns:1fr;}.cc.full{grid-column:1;}header{flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-icon">❤️</div>
+    <div><h1>Sourabh's Health Dashboard</h1><p>Apple Watch Ultra · Ultrahuman Ring · Strava · Magene</p></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <div class="badges" id="srcBadges">
+      <button class="badge bw" data-src="watch" title="Click to filter">⌚ Apple Watch</button>
+      <button class="badge br" data-src="ultra" title="Click to filter">💍 Ultrahuman</button>
+      <button class="badge bs" data-src="strava" title="Click to filter">🚴 Strava</button>
+    </div>
+    <div id="srcInfo" style="display:none;position:absolute;top:60px;right:24px;background:#1a1d27;border:1px solid #2a2d3e;border-radius:10px;padding:14px 16px;min-width:220px;z-index:100;font-size:12px;box-shadow:0 8px 32px #0008;"></div>
+    <span class="updated" id="lu"></span>
+  </div>
+</header>
+<div class="filters">
+  <span class="fl">Period:</span>
+  <button class="fb" data-d="7">7d</button>
+  <button class="fb" data-d="30">30d</button>
+  <button class="fb on" data-d="90">90d</button>
+  <button class="fb" data-d="180">6 months</button>
+  <button class="fb" data-d="365">1 year</button>
+  <button class="fb" data-d="730">All time</button>
+</div>
+<div class="main">
+  <div class="sec">Health &amp; Recovery</div>
+  <div class="kgrid" id="hkpis"></div>
+  <div class="sec" data-src="strava">Training Load · Strava</div>
+  <div class="kgrid" id="tkpis" data-src="strava"></div>
+  <div class="sec">Insights</div>
+  <div class="srow">
+    <div class="scard"><div class="stitle"><span class="dot dg"></span>Improving</div><div id="imp"></div></div>
+    <div class="scard"><div class="stitle"><span class="dot dy"></span>Worth Watching</div><div id="att"></div></div>
+  </div>
+  <div class="sec" data-src="strava">Cycling Performance</div>
+  <div class="cgrid" data-src="strava">
+    <div class="cc full" data-src="strava"><div class="ctitle">Weekly Cycling Distance &amp; Elevation</div><div class="csub">Strava outdoor rides · bars = km · line = elevation (m)</div><div class="cw tall"><canvas id="cCyc"></canvas></div></div>
+    <div class="cc" data-src="strava"><div class="ctitle">Monthly Average Power</div><div class="csub">Average watts per ride · Magene power meter via Strava</div><div class="cw"><canvas id="cPow"></canvas></div></div>
+    <div class="cc" data-src="strava"><div class="ctitle">Ride Distance vs Elevation</div><div class="csub">Each bubble = one ride · size proportional to elevation</div><div class="cw"><canvas id="cRides"></canvas></div></div>
+  </div>
+  <div class="sec" data-src="strava">Running &amp; Strength</div>
+  <div class="cgrid trio" data-src="strava">
+    <div class="cc" data-src="strava"><div class="ctitle">Monthly Running Volume</div><div class="csub">Total km per month · Strava only</div><div class="cw sm"><canvas id="cRun"></canvas></div></div>
+    <div class="cc" data-src="strava"><div class="ctitle">Running Pace Trend</div><div class="csub">Monthly avg pace (min/km) · Strava · lower = faster</div><div class="cw sm"><canvas id="cPace"></canvas></div></div>
+    <div class="cc" data-src="strava"><div class="ctitle">Strength Sessions / Month</div><div class="csub">Gym &amp; weight training · Strava</div><div class="cw sm"><canvas id="cStr"></canvas></div></div>
+  </div>
+  <div class="sec" data-src="watch ultra">Biometrics &amp; Wellness</div>
+  <div class="cgrid">
+    <div class="cc" data-src="watch ultra"><div class="ctitle">Resting Heart Rate</div><div class="csub">Daily · Ultrahuman ring (ring preferred over Watch)</div><div class="cw"><canvas id="cRHR"></canvas></div></div>
+    <div class="cc" data-src="watch"><div class="ctitle">VO₂ Max Trend</div><div class="csub">Monthly estimate · Apple Watch Ultra</div><div class="cw"><canvas id="cVO2"></canvas></div></div>
+    <div class="cc" data-src="ultra"><div class="ctitle">Nightly Body Temperature</div><div class="csub">Ultrahuman ring · elevated values = recovery stress signal</div><div class="cw"><canvas id="cTemp"></canvas></div></div>
+    <div class="cc" data-src="watch"><div class="ctitle">Blood Oxygen (SpO₂)</div><div class="csub">Daily average · Apple Watch</div><div class="cw"><canvas id="cSpO2"></canvas></div></div>
+    <div class="cc" data-src="ultra"><div class="ctitle">Daily Steps</div><div class="csub">Monthly average · Apple Watch + Ultrahuman</div><div class="cw"><canvas id="cSteps"></canvas></div></div>
+    <div class="cc" data-src="watch"><div class="ctitle">Active Energy Burned</div><div class="csub">Monthly average kcal/day · Apple Watch</div><div class="cw"><canvas id="cEnergy"></canvas></div></div>
+  </div>
+</div>
+<script>
+const DATA={"hk":{"rhr_current":50.0,"rhr_avg_30d":49.1,"rhr_avg_prev":51.7,"rhr_change_pct":-5.0,"vo2_current":51.0,"vo2_prev":49.1,"weight_current":64.0,"weight_first":67.5,"temp_avg_30d":34.14,"spo2_avg_30d":96.0,"steps_avg_30d":4954,"last_updated":"2026-05-26 15:28"},"sk":{"rides_30d":7,"dist_30d":355.2,"elev_30d":2136,"rides_90d":20,"dist_90d":976.4,"avg_watts_30d":123.4,"avg_watts_prev":127.3,"watts_change":-3.9,"best_ride_dist":113.39,"best_ride_name":"CNY epic ride with IR","best_ride_date":"2026-02-14","best_power_w":167.7,"best_power_date":"2025-05-22","total_dist":2599.3,"total_elev":13018,"runs_30d":7,"run_dist_30d":60.2,"avg_run_pace":5.35,"strength_30d":10,"strength_per_month_avg":13.7,"avg_hr_riding":143.8,"avg_ride_dist":50.7},"rhr_daily":[{"date":"2025-11-27","v":58.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-11-28","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-11-29","v":61.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-11-30","v":64.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-01","v":55.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-02","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-03","v":56.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-04","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-05","v":60.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-06","v":60.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-07","v":62.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-08","v":54.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-09","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-10","v":56.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-11","v":58.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-12","v":54.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-13","v":59.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-14","v":59.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-15","v":58.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-16","v":66.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-17","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-18","v":63.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-19","v":65.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-20","v":64.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-21","v":60.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-22","v":58.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-23","v":59.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-24","v":56.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-25","v":56.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-26","v":69.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-27","v":58.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-28","v":55.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-29","v":63.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-30","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2025-12-31","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-01","v":59.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-02","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-03","v":62.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-04","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-05","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-06","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-07","v":56.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-08","v":59.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-09","v":61.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-10","v":47.0,"src":"Ultrahuman"},{"date":"2026-01-11","v":57.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-01-12","v":48.0,"src":"Ultrahuman"},{"date":"2026-01-13","v":49.0,"src":"Ultrahuman"},{"date":"2026-01-14","v":49.0,"src":"Ultrahuman"},{"date":"2026-01-15","v":50.0,"src":"Ultrahuman"},{"date":"2026-01-16","v":49.0,"src":"Ultrahuman"},{"date":"2026-01-17","v":46.0,"src":"Ultrahuman"},{"date":"2026-01-18","v":52.0,"src":"Ultrahuman"},{"date":"2026-01-19","v":45.0,"src":"Ultrahuman"},{"date":"2026-01-20","v":51.0,"src":"Ultrahuman"},{"date":"2026-01-21","v":48.0,"src":"Ultrahuman"},{"date":"2026-01-22","v":48.0,"src":"Ultrahuman"},{"date":"2026-01-23","v":56.0,"src":"Ultrahuman"},{"date":"2026-01-24","v":48.0,"src":"Ultrahuman"},{"date":"2026-01-25","v":46.0,"src":"Ultrahuman"},{"date":"2026-01-26","v":46.0,"src":"Ultrahuman"},{"date":"2026-01-27","v":47.0,"src":"Ultrahuman"},{"date":"2026-01-28","v":47.0,"src":"Ultrahuman"},{"date":"2026-01-29","v":50.0,"src":"Ultrahuman"},{"date":"2026-01-30","v":51.0,"src":"Ultrahuman"},{"date":"2026-01-31","v":49.0,"src":"Ultrahuman"},{"date":"2026-02-01","v":43.0,"src":"Ultrahuman"},{"date":"2026-02-02","v":45.0,"src":"Ultrahuman"},{"date":"2026-02-03","v":47.0,"src":"Ultrahuman"},{"date":"2026-02-04","v":47.0,"src":"Ultrahuman"},{"date":"2026-02-05","v":46.0,"src":"Ultrahuman"},{"date":"2026-02-06","v":45.0,"src":"Ultrahuman"},{"date":"2026-02-07","v":48.0,"src":"Ultrahuman"},{"date":"2026-02-08","v":45.0,"src":"Ultrahuman"},{"date":"2026-02-09","v":45.0,"src":"Ultrahuman"},{"date":"2026-02-10","v":48.0,"src":"Ultrahuman"},{"date":"2026-02-11","v":46.0,"src":"Ultrahuman"},{"date":"2026-02-12","v":47.0,"src":"Ultrahuman"},{"date":"2026-02-13","v":55.0,"src":"Ultrahuman"},{"date":"2026-02-14","v":48.0,"src":"Ultrahuman"},{"date":"2026-02-15","v":51.0,"src":"Ultrahuman"},{"date":"2026-02-16","v":45.0,"src":"Ultrahuman"},{"date":"2026-02-17","v":46.0,"src":"Ultrahuman"},{"date":"2026-02-18","v":46.0,"src":"Ultrahuman"},{"date":"2026-02-19","v":44.0,"src":"Ultrahuman"},{"date":"2026-02-20","v":45.0,"src":"Ultrahuman"},{"date":"2026-02-21","v":50.0,"src":"Ultrahuman"},{"date":"2026-02-22","v":44.0,"src":"Ultrahuman"},{"date":"2026-02-23","v":48.0,"src":"Ultrahuman"},{"date":"2026-02-24","v":52.0,"src":"Ultrahuman"},{"date":"2026-02-25","v":52.0,"src":"Ultrahuman"},{"date":"2026-02-26","v":48.0,"src":"Ultrahuman"},{"date":"2026-02-27","v":54.0,"src":"Ultrahuman"},{"date":"2026-02-28","v":45.0,"src":"Ultrahuman"},{"date":"2026-03-01","v":49.0,"src":"Ultrahuman"},{"date":"2026-03-02","v":49.0,"src":"Ultrahuman"},{"date":"2026-03-03","v":48.0,"src":"Ultrahuman"},{"date":"2026-03-04","v":44.0,"src":"Ultrahuman"},{"date":"2026-03-05","v":42.0,"src":"Ultrahuman"},{"date":"2026-03-06","v":47.0,"src":"Ultrahuman"},{"date":"2026-03-07","v":43.0,"src":"Ultrahuman"},{"date":"2026-03-08","v":49.0,"src":"Ultrahuman"},{"date":"2026-03-09","v":46.0,"src":"Ultrahuman"},{"date":"2026-03-10","v":56.0,"src":"Ultrahuman"},{"date":"2026-03-11","v":61.0,"src":"Ultrahuman"},{"date":"2026-03-12","v":57.0,"src":"Ultrahuman"},{"date":"2026-03-13","v":69.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-03-14","v":49.0,"src":"Ultrahuman"},{"date":"2026-03-15","v":51.0,"src":"Ultrahuman"},{"date":"2026-03-16","v":53.0,"src":"Ultrahuman"},{"date":"2026-03-17","v":57.0,"src":"Ultrahuman"},{"date":"2026-03-18","v":56.0,"src":"Ultrahuman"},{"date":"2026-03-19","v":55.0,"src":"Ultrahuman"},{"date":"2026-03-20","v":60.0,"src":"Ultrahuman"},{"date":"2026-03-21","v":53.0,"src":"Ultrahuman"},{"date":"2026-03-22","v":52.0,"src":"Ultrahuman"},{"date":"2026-03-23","v":53.0,"src":"Ultrahuman"},{"date":"2026-03-24","v":47.0,"src":"Ultrahuman"},{"date":"2026-03-25","v":50.0,"src":"Ultrahuman"},{"date":"2026-03-26","v":56.0,"src":"Ultrahuman"},{"date":"2026-03-27","v":50.0,"src":"Ultrahuman"},{"date":"2026-03-28","v":50.0,"src":"Ultrahuman"},{"date":"2026-03-29","v":50.0,"src":"Ultrahuman"},{"date":"2026-03-30","v":51.0,"src":"Ultrahuman"},{"date":"2026-03-31","v":49.0,"src":"Ultrahuman"},{"date":"2026-04-01","v":50.0,"src":"Ultrahuman"},{"date":"2026-04-02","v":49.0,"src":"Ultrahuman"},{"date":"2026-04-03","v":60.0,"src":"Ultrahuman"},{"date":"2026-04-04","v":48.0,"src":"Ultrahuman"},{"date":"2026-04-05","v":48.0,"src":"Ultrahuman"},{"date":"2026-04-06","v":50.0,"src":"Ultrahuman"},{"date":"2026-04-07","v":43.0,"src":"Ultrahuman"},{"date":"2026-04-08","v":47.0,"src":"Ultrahuman"},{"date":"2026-04-09","v":45.0,"src":"Ultrahuman"},{"date":"2026-04-10","v":53.0,"src":"Ultrahuman"},{"date":"2026-04-11","v":46.0,"src":"Ultrahuman"},{"date":"2026-04-12","v":44.0,"src":"Ultrahuman"},{"date":"2026-04-13","v":46.0,"src":"Ultrahuman"},{"date":"2026-04-14","v":48.0,"src":"Ultrahuman"},{"date":"2026-04-15","v":47.0,"src":"Ultrahuman"},{"date":"2026-04-16","v":48.0,"src":"Ultrahuman"},{"date":"2026-04-17","v":46.0,"src":"Ultrahuman"},{"date":"2026-04-18","v":47.0,"src":"Ultrahuman"},{"date":"2026-04-19","v":56.0,"src":"Ultrahuman"},{"date":"2026-04-20","v":55.0,"src":"Ultrahuman"},{"date":"2026-04-21","v":56.0,"src":"Ultrahuman"},{"date":"2026-04-22","v":49.0,"src":"Ultrahuman"},{"date":"2026-04-23","v":45.0,"src":"Ultrahuman"},{"date":"2026-04-24","v":58.0,"src":"Ultrahuman"},{"date":"2026-04-25","v":52.0,"src":"Ultrahuman"},{"date":"2026-04-26","v":54.0,"src":"Ultrahuman"},{"date":"2026-04-27","v":44.0,"src":"Ultrahuman"},{"date":"2026-04-28","v":46.0,"src":"Ultrahuman"},{"date":"2026-04-29","v":44.0,"src":"Ultrahuman"},{"date":"2026-04-30","v":44.0,"src":"Ultrahuman"},{"date":"2026-05-01","v":51.0,"src":"Ultrahuman"},{"date":"2026-05-02","v":45.0,"src":"Ultrahuman"},{"date":"2026-05-03","v":45.0,"src":"Ultrahuman"},{"date":"2026-05-04","v":48.0,"src":"Ultrahuman"},{"date":"2026-05-05","v":46.0,"src":"Ultrahuman"},{"date":"2026-05-06","v":45.0,"src":"Ultrahuman"},{"date":"2026-05-07","v":48.0,"src":"Ultrahuman"},{"date":"2026-05-08","v":50.0,"src":"Ultrahuman"},{"date":"2026-05-09","v":53.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-05-10","v":56.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-05-11","v":54.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-05-12","v":55.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-05-13","v":49.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-05-14","v":52.0,"src":"Sourabh’s Apple Watch"},{"date":"2026-05-15","v":47.0,"src":"Ultrahuman"},{"date":"2026-05-16","v":50.0,"src":"Ultrahuman"},{"date":"2026-05-17","v":45.0,"src":"Ultrahuman"},{"date":"2026-05-18","v":49.0,"src":"Ultrahuman"},{"date":"2026-05-19","v":53.0,"src":"Ultrahuman"},{"date":"2026-05-20","v":50.0,"src":"Ultrahuman"},{"date":"2026-05-21","v":49.0,"src":"Ultrahuman"},{"date":"2026-05-22","v":56.0,"src":"Ultrahuman"},{"date":"2026-05-23","v":49.0,"src":"Ultrahuman"},{"date":"2026-05-24","v":51.0,"src":"Ultrahuman"},{"date":"2026-05-25","v":45.0,"src":"Ultrahuman"},{"date":"2026-05-26","v":50.0,"src":"Ultrahuman"}],"monthly_vo2":[{"month":"2024-08","avg":39.6},{"month":"2024-09","avg":37.7},{"month":"2024-10","avg":39.7},{"month":"2024-11","avg":40.5},{"month":"2024-12","avg":38.2},{"month":"2025-01","avg":37.7},{"month":"2025-02","avg":38.6},{"month":"2025-03","avg":39.4},{"month":"2025-04","avg":40.6},{"month":"2025-05","avg":41.7},{"month":"2025-06","avg":40.9},{"month":"2025-07","avg":40.6},{"month":"2025-08","avg":40.7},{"month":"2025-09","avg":42.2},{"month":"2025-10","avg":44.3},{"month":"2025-11","avg":45.7},{"month":"2025-12","avg":46.2},{"month":"2026-01","avg":49.2},{"month":"2026-02","avg":50.8},{"month":"2026-03","avg":49.1},{"month":"2026-04","avg":48.9},{"month":"2026-05","avg":51.0}],"body_temp":[{"date":"2026-01-09","v":33.12},{"date":"2026-01-10","v":34.92},{"date":"2026-01-11","v":34.71},{"date":"2026-01-12","v":34.56},{"date":"2026-01-13","v":34.46},{"date":"2026-01-14","v":34.69},{"date":"2026-01-15","v":33.88},{"date":"2026-01-16","v":34.29},{"date":"2026-01-17","v":34.78},{"date":"2026-01-18","v":34.53},{"date":"2026-01-19","v":34.0},{"date":"2026-01-20","v":34.29},{"date":"2026-01-21","v":34.06},{"date":"2026-01-22","v":34.18},{"date":"2026-01-23","v":34.2},{"date":"2026-01-24","v":34.46},{"date":"2026-01-25","v":34.15},{"date":"2026-01-26","v":34.5},{"date":"2026-01-27","v":34.41},{"date":"2026-01-28","v":34.2},{"date":"2026-01-29","v":33.73},{"date":"2026-01-30","v":34.55},{"date":"2026-01-31","v":34.75},{"date":"2026-02-01","v":34.46},{"date":"2026-02-02","v":34.47},{"date":"2026-02-03","v":34.21},{"date":"2026-02-04","v":33.48},{"date":"2026-02-05","v":34.95},{"date":"2026-02-06","v":34.2},{"date":"2026-02-07","v":34.99},{"date":"2026-02-08","v":35.18},{"date":"2026-02-09","v":34.07},{"date":"2026-02-10","v":34.63},{"date":"2026-02-11","v":34.22},{"date":"2026-02-12","v":33.86},{"date":"2026-02-13","v":34.24},{"date":"2026-02-14","v":34.65},{"date":"2026-02-15","v":34.56},{"date":"2026-02-16","v":34.07},{"date":"2026-02-17","v":34.56},{"date":"2026-02-18","v":34.38},{"date":"2026-02-19","v":34.22},{"date":"2026-02-20","v":33.17},{"date":"2026-02-21","v":34.62},{"date":"2026-02-22","v":34.21},{"date":"2026-02-23","v":34.64},{"date":"2026-02-24","v":34.54},{"date":"2026-02-25","v":34.9},{"date":"2026-02-26","v":34.28},{"date":"2026-02-27","v":34.3},{"date":"2026-02-28","v":34.73},{"date":"2026-03-01","v":34.71},{"date":"2026-03-02","v":34.59},{"date":"2026-03-03","v":34.31},{"date":"2026-03-04","v":34.53},{"date":"2026-03-05","v":34.0},{"date":"2026-03-06","v":34.29},{"date":"2026-03-07","v":34.47},{"date":"2026-03-08","v":34.35},{"date":"2026-03-09","v":34.33},{"date":"2026-03-10","v":35.05},{"date":"2026-03-11","v":35.59},{"date":"2026-03-12","v":34.91},{"date":"2026-03-13","v":34.9},{"date":"2026-03-14","v":34.17},{"date":"2026-03-15","v":34.72},{"date":"2026-03-16","v":34.12},{"date":"2026-03-17","v":34.45},{"date":"2026-03-18","v":34.06},{"date":"2026-03-19","v":33.83},{"date":"2026-03-20","v":33.62},{"date":"2026-03-21","v":34.23},{"date":"2026-03-22","v":34.48},{"date":"2026-03-23","v":34.51},{"date":"2026-03-24","v":34.66},{"date":"2026-03-25","v":33.92},{"date":"2026-03-26","v":32.99},{"date":"2026-03-27","v":32.7},{"date":"2026-03-28","v":32.95},{"date":"2026-03-29","v":34.01},{"date":"2026-03-30","v":34.42},{"date":"2026-03-31","v":34.78},{"date":"2026-04-01","v":34.77},{"date":"2026-04-02","v":34.19},{"date":"2026-04-03","v":34.79},{"date":"2026-04-04","v":34.81},{"date":"2026-04-05","v":34.9},{"date":"2026-04-06","v":34.75},{"date":"2026-04-07","v":34.4},{"date":"2026-04-08","v":34.07},{"date":"2026-04-09","v":34.42},{"date":"2026-04-10","v":33.96},{"date":"2026-04-11","v":34.93},{"date":"2026-04-12","v":34.7},{"date":"2026-04-13","v":34.38},{"date":"2026-04-14","v":34.18},{"date":"2026-04-15","v":34.54},{"date":"2026-04-16","v":34.86},{"date":"2026-04-17","v":34.2},{"date":"2026-04-18","v":35.14},{"date":"2026-04-19","v":34.87},{"date":"2026-04-20","v":34.37},{"date":"2026-04-21","v":34.12},{"date":"2026-04-22","v":33.92},{"date":"2026-04-23","v":34.47},{"date":"2026-04-24","v":34.33},{"date":"2026-04-25","v":34.93},{"date":"2026-04-26","v":34.81},{"date":"2026-04-27","v":34.54},{"date":"2026-04-28","v":34.27},{"date":"2026-04-29","v":33.12},{"date":"2026-04-30","v":34.16},{"date":"2026-05-01","v":34.63},{"date":"2026-05-02","v":34.93},{"date":"2026-05-03","v":34.42},{"date":"2026-05-04","v":33.68},{"date":"2026-05-05","v":34.48},{"date":"2026-05-06","v":33.99},{"date":"2026-05-07","v":34.46},{"date":"2026-05-08","v":34.28},{"date":"2026-05-14","v":34.53},{"date":"2026-05-15","v":34.08},{"date":"2026-05-16","v":34.4},{"date":"2026-05-17","v":33.93},{"date":"2026-05-18","v":33.53},{"date":"2026-05-19","v":34.12},{"date":"2026-05-20","v":33.61},{"date":"2026-05-21","v":33.75},{"date":"2026-05-22","v":33.79},{"date":"2026-05-23","v":34.29},{"date":"2026-05-24","v":34.34},{"date":"2026-05-25","v":33.7},{"date":"2026-05-26","v":33.75}],"spo2_daily":[{"date":"2025-11-16","v":94.7},{"date":"2025-11-17","v":92.0},{"date":"2025-11-18","v":95.0},{"date":"2025-11-21","v":93.0},{"date":"2025-11-22","v":94.5},{"date":"2025-11-23","v":94.0},{"date":"2025-11-24","v":95.8},{"date":"2025-11-25","v":97.8},{"date":"2025-11-26","v":97.7},{"date":"2025-11-27","v":95.1},{"date":"2025-11-28","v":95.3},{"date":"2025-11-29","v":95.7},{"date":"2025-11-30","v":93.6},{"date":"2025-12-01","v":94.0},{"date":"2025-12-02","v":92.6},{"date":"2025-12-03","v":96.4},{"date":"2025-12-04","v":96.8},{"date":"2025-12-05","v":95.2},{"date":"2025-12-06","v":96.4},{"date":"2025-12-07","v":94.3},{"date":"2025-12-08","v":92.3},{"date":"2025-12-09","v":95.0},{"date":"2025-12-10","v":93.5},{"date":"2025-12-11","v":94.7},{"date":"2025-12-12","v":95.0},{"date":"2025-12-13","v":93.0},{"date":"2025-12-14","v":97.0},{"date":"2025-12-15","v":94.0},{"date":"2025-12-16","v":94.0},{"date":"2025-12-17","v":93.5},{"date":"2025-12-20","v":98.0},{"date":"2025-12-21","v":97.0},{"date":"2025-12-22","v":95.3},{"date":"2025-12-23","v":94.7},{"date":"2025-12-24","v":96.0},{"date":"2025-12-25","v":95.6},{"date":"2025-12-26","v":96.1},{"date":"2025-12-27","v":95.8},{"date":"2025-12-28","v":96.2},{"date":"2025-12-29","v":93.0},{"date":"2025-12-30","v":96.4},{"date":"2025-12-31","v":95.8},{"date":"2026-01-01","v":96.3},{"date":"2026-01-02","v":96.3},{"date":"2026-01-03","v":95.3},{"date":"2026-01-04","v":94.0},{"date":"2026-01-05","v":96.2},{"date":"2026-01-06","v":97.5},{"date":"2026-01-07","v":97.0},{"date":"2026-01-08","v":94.7},{"date":"2026-01-09","v":95.5},{"date":"2026-01-10","v":95.2},{"date":"2026-01-11","v":95.8},{"date":"2026-01-12","v":94.3},{"date":"2026-01-13","v":96.0},{"date":"2026-01-14","v":94.8},{"date":"2026-01-15","v":96.6},{"date":"2026-01-16","v":95.8},{"date":"2026-01-17","v":94.0},{"date":"2026-01-18","v":94.8},{"date":"2026-01-19","v":96.0},{"date":"2026-01-20","v":97.0},{"date":"2026-01-22","v":96.8},{"date":"2026-01-23","v":94.7},{"date":"2026-01-24","v":95.5},{"date":"2026-01-25","v":96.2},{"date":"2026-01-26","v":95.2},{"date":"2026-01-27","v":95.2},{"date":"2026-01-28","v":96.2},{"date":"2026-01-29","v":97.2},{"date":"2026-01-30","v":95.6},{"date":"2026-01-31","v":95.4},{"date":"2026-02-01","v":96.8},{"date":"2026-02-02","v":95.5},{"date":"2026-02-03","v":93.5},{"date":"2026-02-04","v":96.0},{"date":"2026-02-05","v":96.7},{"date":"2026-02-06","v":96.0},{"date":"2026-02-07","v":95.8},{"date":"2026-02-08","v":94.3},{"date":"2026-02-09","v":94.6},{"date":"2026-02-10","v":94.8},{"date":"2026-02-11","v":98.0},{"date":"2026-02-12","v":96.1},{"date":"2026-02-13","v":95.8},{"date":"2026-02-14","v":95.0},{"date":"2026-02-15","v":94.7},{"date":"2026-02-16","v":94.9},{"date":"2026-02-17","v":95.0},{"date":"2026-02-18","v":95.3},{"date":"2026-02-19","v":94.0},{"date":"2026-02-20","v":98.0},{"date":"2026-02-21","v":96.7},{"date":"2026-02-22","v":93.8},{"date":"2026-02-23","v":93.8},{"date":"2026-02-24","v":96.7},{"date":"2026-02-25","v":97.2},{"date":"2026-02-26","v":97.3},{"date":"2026-02-27","v":95.0},{"date":"2026-02-28","v":94.8},{"date":"2026-03-01","v":94.0},{"date":"2026-03-02","v":95.3},{"date":"2026-03-03","v":95.5},{"date":"2026-03-05","v":97.7},{"date":"2026-03-06","v":96.2},{"date":"2026-03-07","v":93.8},{"date":"2026-03-08","v":96.6},{"date":"2026-03-09","v":96.1},{"date":"2026-03-10","v":97.0},{"date":"2026-03-13","v":95.3},{"date":"2026-03-14","v":96.2},{"date":"2026-03-15","v":96.3},{"date":"2026-03-16","v":98.5},{"date":"2026-03-17","v":95.3},{"date":"2026-03-18","v":95.0},{"date":"2026-03-19","v":95.5},{"date":"2026-03-20","v":96.2},{"date":"2026-03-21","v":96.4},{"date":"2026-03-22","v":95.8},{"date":"2026-03-23","v":95.1},{"date":"2026-03-24","v":93.7},{"date":"2026-03-26","v":89.5},{"date":"2026-03-28","v":97.0},{"date":"2026-03-29","v":97.0},{"date":"2026-03-30","v":93.0},{"date":"2026-03-31","v":96.2},{"date":"2026-04-01","v":95.3},{"date":"2026-04-02","v":98.0},{"date":"2026-04-03","v":95.2},{"date":"2026-04-04","v":93.4},{"date":"2026-04-05","v":90.7},{"date":"2026-04-06","v":95.7},{"date":"2026-04-07","v":96.4},{"date":"2026-04-08","v":96.6},{"date":"2026-04-09","v":94.8},{"date":"2026-04-10","v":97.0},{"date":"2026-04-11","v":94.5},{"date":"2026-04-12","v":94.0},{"date":"2026-04-13","v":97.2},{"date":"2026-04-14","v":94.6},{"date":"2026-04-15","v":98.0},{"date":"2026-04-16","v":94.0},{"date":"2026-04-17","v":95.0},{"date":"2026-04-18","v":94.1},{"date":"2026-04-19","v":94.2},{"date":"2026-04-20","v":96.7},{"date":"2026-04-21","v":98.7},{"date":"2026-04-22","v":95.6},{"date":"2026-04-23","v":94.8},{"date":"2026-04-24","v":96.4},{"date":"2026-04-25","v":95.0},{"date":"2026-04-26","v":95.8},{"date":"2026-04-27","v":94.7},{"date":"2026-04-28","v":96.6},{"date":"2026-04-30","v":96.8},{"date":"2026-05-01","v":95.6},{"date":"2026-05-02","v":98.0},{"date":"2026-05-03","v":95.3},{"date":"2026-05-04","v":96.7},{"date":"2026-05-05","v":93.0},{"date":"2026-05-06","v":95.8},{"date":"2026-05-07","v":97.6},{"date":"2026-05-08","v":95.0},{"date":"2026-05-09","v":96.7},{"date":"2026-05-10","v":96.0},{"date":"2026-05-11","v":96.4},{"date":"2026-05-12","v":96.2},{"date":"2026-05-13","v":95.0},{"date":"2026-05-14","v":96.0},{"date":"2026-05-15","v":96.7},{"date":"2026-05-16","v":97.0},{"date":"2026-05-17","v":94.8},{"date":"2026-05-18","v":96.3},{"date":"2026-05-19","v":96.6},{"date":"2026-05-20","v":96.4},{"date":"2026-05-21","v":96.4},{"date":"2026-05-22","v":98.2},{"date":"2026-05-23","v":95.2},{"date":"2026-05-24","v":95.8},{"date":"2026-05-25","v":92.3},{"date":"2026-05-26","v":95.8}],"monthly_steps":[{"month":"2026-05","avg":4954}],"monthly_energy":[{"month":"2026-05","avg":1137}],"weekly_cyc":[{"week":"2025-05-05","dist":53.8,"rides":1,"elev":131},{"week":"2025-05-19","dist":67.4,"rides":3,"elev":175},{"week":"2025-06-23","dist":77.0,"rides":4,"elev":191},{"week":"2025-06-30","dist":10.8,"rides":2,"elev":10},{"week":"2025-07-07","dist":59.2,"rides":1,"elev":325},{"week":"2025-07-14","dist":53.9,"rides":1,"elev":207},{"week":"2025-07-21","dist":56.8,"rides":3,"elev":107},{"week":"2025-07-28","dist":72.6,"rides":1,"elev":300},{"week":"2025-08-04","dist":60.6,"rides":1,"elev":352},{"week":"2025-08-11","dist":48.5,"rides":1,"elev":170},{"week":"2025-08-18","dist":62.2,"rides":1,"elev":371},{"week":"2025-08-25","dist":10.0,"rides":1,"elev":62},{"week":"2025-09-01","dist":63.4,"rides":1,"elev":379},{"week":"2025-09-08","dist":63.4,"rides":1,"elev":393},{"week":"2025-09-15","dist":63.4,"rides":1,"elev":382},{"week":"2025-09-22","dist":63.7,"rides":1,"elev":384},{"week":"2025-09-29","dist":66.7,"rides":2,"elev":311},{"week":"2025-10-06","dist":64.1,"rides":1,"elev":389},{"week":"2025-10-13","dist":8.9,"rides":1,"elev":54},{"week":"2025-10-20","dist":100.8,"rides":2,"elev":497},{"week":"2025-10-27","dist":63.9,"rides":1,"elev":383},{"week":"2025-11-10","dist":58.0,"rides":1,"elev":426},{"week":"2025-12-29","dist":17.7,"rides":1,"elev":25},{"week":"2026-01-12","dist":46.6,"rides":1,"elev":70},{"week":"2026-01-19","dist":63.0,"rides":1,"elev":418},{"week":"2026-01-26","dist":64.5,"rides":1,"elev":430},{"week":"2026-02-02","dist":9.5,"rides":1,"elev":56},{"week":"2026-02-09","dist":172.5,"rides":2,"elev":788},{"week":"2026-02-23","dist":64.4,"rides":1,"elev":391},{"week":"2026-03-02","dist":59.9,"rides":2,"elev":114},{"week":"2026-03-16","dist":65.3,"rides":1,"elev":433},{"week":"2026-03-23","dist":38.0,"rides":1,"elev":46},{"week":"2026-03-30","dist":116.2,"rides":2,"elev":793},{"week":"2026-04-06","dist":96.6,"rides":2,"elev":437},{"week":"2026-04-13","dist":32.6,"rides":1,"elev":59},{"week":"2026-04-20","dist":179.8,"rides":4,"elev":1039},{"week":"2026-04-27","dist":130.9,"rides":3,"elev":813},{"week":"2026-05-04","dist":63.4,"rides":1,"elev":369},{"week":"2026-05-11","dist":65.0,"rides":1,"elev":367},{"week":"2026-05-18","dist":64.3,"rides":1,"elev":371}],"monthly_cyc":[{"month":"2025-05","dist":121.2,"rides":4,"elev":306,"avg_w":124.4,"avg_hr":145.5},{"month":"2025-06","dist":77.0,"rides":4,"elev":191,"avg_w":114.4,"avg_hr":null},{"month":"2025-07","dist":253.4,"rides":8,"elev":949,"avg_w":111.6,"avg_hr":145.2},{"month":"2025-08","dist":181.3,"rides":4,"elev":955,"avg_w":99.5,"avg_hr":93.5},{"month":"2025-09","dist":253.9,"rides":4,"elev":1538,"avg_w":131.6,"avg_hr":null},{"month":"2025-10","dist":304.4,"rides":7,"elev":1634,"avg_w":110.7,"avg_hr":120.0},{"month":"2025-11","dist":58.0,"rides":1,"elev":426,"avg_w":134.7,"avg_hr":null},{"month":"2025-12","dist":17.7,"rides":1,"elev":25,"avg_w":148.8,"avg_hr":null},{"month":"2026-01","dist":174.1,"rides":3,"elev":918,"avg_w":130.8,"avg_hr":154.2},{"month":"2026-02","dist":246.5,"rides":4,"elev":1235,"avg_w":106.8,"avg_hr":140.4},{"month":"2026-03","dist":163.2,"rides":4,"elev":593,"avg_w":108.4,"avg_hr":135.3},{"month":"2026-04","dist":540.4,"rides":11,"elev":3100,"avg_w":138.1,"avg_hr":156.0},{"month":"2026-05","dist":208.4,"rides":4,"elev":1148,"avg_w":111.8,"avg_hr":135.2}],"power_trend":[{"month":"2025-05","w":124.4},{"month":"2025-06","w":114.4},{"month":"2025-07","w":111.6},{"month":"2025-08","w":99.5},{"month":"2025-09","w":131.6},{"month":"2025-10","w":110.7},{"month":"2025-11","w":134.7},{"month":"2025-12","w":148.8},{"month":"2026-01","w":130.8},{"month":"2026-02","w":106.8},{"month":"2026-03","w":108.4},{"month":"2026-04","w":138.1},{"month":"2026-05","w":111.8}],"monthly_run":[{"month":"2025-04","dist":11.5,"runs":1,"avg_pace":6.58,"avg_hr":165.8},{"month":"2025-05","dist":46.0,"runs":5,"avg_pace":6.34,"avg_hr":167.6},{"month":"2025-07","dist":35.0,"runs":4,"avg_pace":6.79,"avg_hr":156.5},{"month":"2025-08","dist":70.9,"runs":6,"avg_pace":6.12,"avg_hr":161.4},{"month":"2025-09","dist":56.2,"runs":5,"avg_pace":5.99,"avg_hr":151.8},{"month":"2025-10","dist":71.7,"runs":7,"avg_pace":5.7,"avg_hr":157.5},{"month":"2025-11","dist":81.2,"runs":7,"avg_pace":5.87,"avg_hr":160.4},{"month":"2025-12","dist":47.7,"runs":5,"avg_pace":6.08,"avg_hr":154.2},{"month":"2026-01","dist":41.6,"runs":5,"avg_pace":5.38,"avg_hr":158.0},{"month":"2026-02","dist":52.0,"runs":5,"avg_pace":5.32,"avg_hr":155.9},{"month":"2026-03","dist":50.7,"runs":5,"avg_pace":5.5,"avg_hr":153.4},{"month":"2026-04","dist":47.0,"runs":9,"avg_pace":5.61,"avg_hr":155.1},{"month":"2026-05","dist":60.2,"runs":7,"avg_pace":5.35,"avg_hr":145.2}],"monthly_str":[{"month":"2025-04","sessions":3},{"month":"2025-05","sessions":18},{"month":"2025-06","sessions":6},{"month":"2025-07","sessions":15},{"month":"2025-08","sessions":15},{"month":"2025-09","sessions":19},{"month":"2025-10","sessions":19},{"month":"2025-11","sessions":16},{"month":"2025-12","sessions":16},{"month":"2026-01","sessions":16},{"month":"2026-02","sessions":14},{"month":"2026-03","sessions":12},{"month":"2026-04","sessions":14},{"month":"2026-05","sessions":10}],"rides":[{"date":"2025-05-05","name":"Changi Village after a long time","dist":53.78,"elev":131,"w":141.0,"hr":null,"prs":70},{"date":"2025-05-22","name":"TMCR sprint","dist":54.29,"elev":129,"w":167.7,"hr":null,"prs":79},{"date":"2025-05-25","name":"Morning Ride","dist":6.29,"elev":13,"w":89.4,"hr":132.7,"prs":0},{"date":"2025-05-25","name":"Morning Ride","dist":6.82,"elev":33,"w":99.4,"hr":158.3,"prs":1},{"date":"2025-06-23","name":"New BMC!","dist":5.79,"elev":12,"w":129.4,"hr":null,"prs":4},{"date":"2025-06-23","name":"BMC test ride","dist":21.5,"elev":24,"w":75.5,"hr":null,"prs":20},{"date":"2025-06-29","name":"Bike com failure part1 ride","dist":15.88,"elev":30,"w":124.9,"hr":null,"prs":13},{"date":"2025-06-29","name":"Fort Siloso and back","dist":33.8,"elev":125,"w":127.7,"hr":null,"prs":39},{"date":"2025-07-01","name":"Shopping ride","dist":5.74,"elev":1,"w":95.6,"hr":null,"prs":3},{"date":"2025-07-03","name":"Shopping ride 2","dist":5.05,"elev":9,"w":109.9,"hr":null,"prs":3},{"date":"2025-07-10","name":"Sentosa climbs loop ride","dist":59.16,"elev":325,"w":131.0,"hr":null,"prs":128},{"date":"2025-07-19","name":"Single loop Sentosa solo","dist":53.91,"elev":207,"w":141.6,"hr":null,"prs":83},{"date":"2025-07-26","name":"TMCR solo afternoon ride","dist":46.15,"elev":83,"w":145.4,"hr":null,"prs":59},{"date":"2025-07-27","name":"Morning Ride","dist":5.53,"elev":9,"w":69.8,"hr":138.1,"prs":1},{"date":"2025-07-27","name":"Morning Ride","dist":5.17,"elev":15,"w":88.8,"hr":152.4,"prs":0},{"date":"2025-07-31","name":"Inner loop with IR mates","dist":72.59,"elev":300,"w":110.7,"hr":null,"prs":132},{"date":"2025-08-07","name":"Sentosa loops with IR","dist":60.6,"elev":352,"w":114.0,"hr":null,"prs":120},{"date":"2025-08-17","name":"Solo Mt Faber Pilgrimage","dist":48.46,"elev":170,"w":129.2,"hr":null,"prs":48},{"date":"2025-08-21","name":"Sentosa with IR","dist":62.25,"elev":371,"w":125.6,"hr":null,"prs":112},{"date":"2025-08-31","name":"Taking it slow with my little boy","dist":9.99,"elev":62,"w":29.3,"hr":93.5,"prs":0},{"date":"2025-09-04","name":"Back to the climbs with IR","dist":63.42,"elev":379,"w":128.8,"hr":null,"prs":97},{"date":"2025-09-11","name":"IR ride with great weather and some fun puddles","dist":63.42,"elev":393,"w":137.8,"hr":null,"prs":86},{"date":"2025-09-18","name":"Sentosa loops with IR & less benign weather","dist":63.41,"elev":382,"w":125.8,"hr":null,"prs":95},{"date":"2025-09-25","name":"Thu night ride with IR","dist":63.72,"elev":384,"w":133.8,"hr":null,"prs":99},{"date":"2025-10-02","name":"TMCR with IR","dist":53.98,"elev":135,"w":143.0,"hr":null,"prs":105},{"date":"2025-10-05","name":"Ride to the neighbourhood climbs","dist":12.71,"elev":176,"w":120.0,"hr":null,"prs":9},{"date":"2025-10-09","name":"Sentosa loops, with IR","dist":64.07,"elev":389,"w":134.3,"hr":null,"prs":60},{"date":"2025-10-19","name":"Morning Ride with my kid","dist":8.93,"elev":54,"w":31.9,"hr":86.0,"prs":0},{"date":"2025-10-20","name":"Leisurely family ride","dist":39.12,"elev":160,"w":87.7,"hr":null,"prs":14},{"date":"2025-10-23","name":"Southern Ridges with IR","dist":61.65,"elev":337,"w":137.0,"hr":157.7,"prs":94},{"date":"2025-10-30","name":"Southern ridges with some adventure","dist":63.92,"elev":383,"w":121.3,"hr":116.3,"prs":97},{"date":"2025-11-13","name":"Back on the wheels with IR","dist":57.95,"elev":426,"w":134.7,"hr":null,"prs":105},{"date":"2025-12-30","name":"Last ride of 2025 got flat tyre 😓","dist":17.67,"elev":25,"w":148.8,"hr":null,"prs":46},{"date":"2026-01-16","name":"Morning ride","dist":46.64,"elev":70,"w":138.3,"hr":null,"prs":91},{"date":"2026-01-22","name":"Southern Ridges with IR - first one in 2026!","dist":62.98,"elev":418,"w":126.0,"hr":156.0,"prs":89},{"date":"2026-01-29","name":"Windy and not so chill ride 😅","dist":64.45,"elev":430,"w":128.0,"hr":152.5,"prs":103},{"date":"2026-02-02","name":"Short evening ride with kids","dist":9.53,"elev":56,"w":59.9,"hr":100.0,"prs":3},{"date":"2026-02-12","name":"1.5x Sentosa with cool wind in my head & IR","dist":59.15,"elev":331,"w":132.6,"hr":157.3,"prs":42},{"date":"2026-02-14","name":"CNY epic ride with IR","dist":113.39,"elev":457,"w":116.0,"hr":151.8,"prs":99},{"date":"2026-02-26","name":"Southern Ridges with IR","dist":64.36,"elev":391,"w":118.9,"hr":152.7,"prs":52},{"date":"2026-03-05","name":"Rain in the west = fun solo in the East","dist":47.35,"elev":75,"w":155.8,"hr":164.9,"prs":58},{"date":"2026-03-07","name":"Leisure family ride","dist":12.48,"elev":39,"w":34.3,"hr":84.3,"prs":0},{"date":"2026-03-19","name":"Southern Ridges with IR","dist":65.31,"elev":433,"w":122.3,"hr":157.6,"prs":63},{"date":"2026-03-23","name":"Chill morning ride","dist":38.0,"elev":46,"w":121.1,"hr":134.5,"prs":4},{"date":"2026-04-02","name":"Southern Ridges and IR","dist":63.73,"elev":404,"w":127.3,"hr":159.4,"prs":96},{"date":"2026-04-02","name":"Evening Ride","dist":52.54,"elev":389,"w":140.2,"hr":null,"prs":0},{"date":"2026-04-07","name":"Brick part 2 - cycling and I stop here today","dist":32.71,"elev":56,"w":144.1,"hr":null,"prs":58},{"date":"2026-04-09","name":"Southern Ridges with IR","dist":63.85,"elev":381,"w":123.0,"hr":149.2,"prs":61},{"date":"2026-04-16","name":"Brick part 2 cycling","dist":32.6,"elev":59,"w":166.8,"hr":null,"prs":53},{"date":"2026-04-22","name":"Morning ride","dist":32.34,"elev":33,"w":150.0,"hr":null,"prs":33},{"date":"2026-04-23","name":"Sentosa loops with IR","dist":63.98,"elev":375,"w":118.7,"hr":149.6,"prs":50},{"date":"2026-04-23","name":"Evening Ride","dist":51.94,"elev":415,"w":132.7,"hr":null,"prs":0},{"date":"2026-04-26","name":"T100 Standard Duathlon bike ride","dist":31.56,"elev":216,"w":166.5,"hr":175.9,"prs":39},{"date":"2026-04-30","name":"Thu night Sentosa loops with IR","dist":63.64,"elev":374,"w":128.4,"hr":145.9,"prs":12},{"date":"2026-04-30","name":"Evening Ride","dist":51.6,"elev":398,"w":121.7,"hr":null,"prs":0},{"date":"2026-05-01","name":"Relaxing ride with family","dist":15.72,"elev":41,"w":32.3,"hr":83.8,"prs":7},{"date":"2026-05-07","name":"Sentosa 2x with IR","dist":63.41,"elev":369,"w":136.9,"hr":155.4,"prs":45},{"date":"2026-05-14","name":"2x Sentosa loops with IR","dist":65.04,"elev":367,"w":136.5,"hr":144.7,"prs":61},{"date":"2026-05-21","name":"If it’s Thursday it must be Sentosa with IR","dist":64.27,"elev":371,"w":141.3,"hr":157.0,"prs":53}]};
+
+const HK=DATA.hk, SK=DATA.sk;
+let days=90;
+const CH={};
+
+document.getElementById('lu').textContent='↻ '+HK.last_updated;
+
+// ── Helpers ──────────────────────────────────────────
+function cutoff(d){const dt=new Date();dt.setDate(dt.getDate()-d);return dt.toISOString().slice(0,10);}
+function fd(arr,d,k='date'){const c=cutoff(d);return arr.filter(x=>(x[k]||x.week||x.month||'')>=c);}
+function avg(arr,k='v'){const v=arr.map(x=>x[k]).filter(n=>n!=null&&!isNaN(n));return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;}
+function f1(n){return n==null?'—':Number(n).toFixed(1);}
+function f0(n){return n==null?'—':Math.round(n).toLocaleString();}
+
+Chart.defaults.color='#8892b0';
+Chart.defaults.borderColor='#2a2d3e';
+Chart.defaults.font.family='-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+Chart.defaults.font.size=11;
+const grid={color:'#2a2d3e88',drawBorder:false};
+const tip={backgroundColor:'#1a1d27',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#8892b0',padding:10,cornerRadius:8};
+
+function line(id,labels,datasets,ymin,ymax){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  if(CH[id])CH[id].destroy();
+  CH[id]=new Chart(ctx,{type:'line',data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,animation:{duration:300},
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:datasets.length>1,labels:{boxWidth:10,padding:12}},tooltip:tip},
+    scales:{x:{grid,ticks:{maxTicksLimit:9,maxRotation:0}},
+            y:{grid,min:ymin,max:ymax,ticks:{maxTicksLimit:6}}}
+  }});
+}
+function bar(id,labels,datasets,y2=null){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  if(CH[id])CH[id].destroy();
+  const scales={x:{grid:{display:false},ticks:{maxTicksLimit:14,maxRotation:0}},
+                y:{grid,ticks:{maxTicksLimit:6}}};
+  if(y2)scales.y1={...y2,position:'right',grid:{display:false},ticks:{maxTicksLimit:6}};
+  CH[id]=new Chart(ctx,{type:'bar',data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,animation:{duration:300},
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:datasets.length>1,labels:{boxWidth:10,padding:12}},tooltip:tip},
+    scales
+  }});
+}
+function scatter(id,datasets){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  if(CH[id])CH[id].destroy();
+  CH[id]=new Chart(ctx,{type:'bubble',data:{datasets},options:{
+    responsive:true,maintainAspectRatio:false,animation:{duration:300},
+    plugins:{legend:{display:false},tooltip:{...tip,callbacks:{
+      label:c=>`${c.raw.label}: ${c.raw.x}km · ${c.raw.elev}m elev${c.raw.w?' · '+c.raw.w+'W':''}`
+    }}},
+    scales:{
+      x:{grid,title:{display:true,text:'Distance (km)'},min:0,ticks:{maxTicksLimit:8}},
+      y:{grid,title:{display:true,text:'Avg Power (W)'},min:60,ticks:{maxTicksLimit:6}}
+    }
+  }});
+}
+
+// ── KPI cards ─────────────────────────────────────────
+function kcard(label,val,unit,cls,trend,trendLbl,sub,goodDir='down',src=''){
+  let ta='tn',arrow='';
+  if(trend!=null&&trend!==0){
+    arrow=trend<0?'↓':'↑';
+    if(goodDir==='down') ta=trend<0?'tg':'tr';
+    else                 ta=trend>0?'tg':'tr';
+  }
+  const srcAttr = src ? ` data-src="${src}"` : '';
+  return `<div class="kcard ${cls}"${srcAttr}>
+    <div class="klbl">${label}</div>
+    <div class="kval">${val}<span class="kunit">${unit}</span></div>
+    ${trendLbl?`<div class="ktrend ${ta}">${arrow} <span>${trendLbl}</span></div>`:''}
+    ${sub?`<div class="ksub">${sub}</div>`:''}
+  </div>`;
+}
+
+function renderKPIs(){
+  const wc=HK.weight_current, wf=HK.weight_first;
+  const wdiff=wc&&wf?round1(wc-wf):null;
+  document.getElementById('hkpis').innerHTML=[
+    kcard('Resting HR',HK.rhr_current,'bpm','kb',HK.rhr_change_pct,
+      HK.rhr_change_pct!=null?`${HK.rhr_change_pct>0?'+':''}${HK.rhr_change_pct}% vs prev 60d`:null,
+      `30d avg: ${HK.rhr_avg_30d} bpm`,'down','watch ultra'),
+    kcard('VO₂ Max',f1(HK.vo2_current),'mL/kg/min','kg',
+      HK.vo2_prev?round1(HK.vo2_current-HK.vo2_prev):null,
+      HK.vo2_prev?`${round1(HK.vo2_current-HK.vo2_prev)>0?'+':''}${round1(HK.vo2_current-HK.vo2_prev)} vs 2mo ago`:null,
+      'Excellent range (≥49)','up','watch'),
+    kcard('Weight',wc,'kg','kp',wdiff,
+      wdiff!=null?`${wdiff>0?'+':''}${wdiff} kg since baseline`:null,
+      'Steady downward trend','down','watch ultra'),
+    kcard('Body Temp (ring)',f1(HK.temp_avg_30d),'°C','kr',null,'Ultrahuman 30d avg',
+      'Elevated = recovery stress',null,'ultra'),
+    kcard('SpO₂',f1(HK.spo2_avg_30d),'%','ky',null,'30d avg · Apple Watch',
+      HK.spo2_avg_30d>=96?'Normal range ✓':'Below 96% — monitor',null,'watch'),
+    kcard('Steps / Day',f0(HK.steps_avg_30d),'','kt',null,'30d monthly avg',
+      '+ cycling days offset this','up','ultra'),
+  ].join('');
+
+  document.getElementById('tkpis').innerHTML=[
+    kcard('Cycling (30d)',SK.dist_30d,'km','ko',null,
+      `${SK.rides_30d} rides · ${SK.elev_30d?.toLocaleString()} m elev`,
+      `All-time: ${SK.total_dist?.toLocaleString()} km total`,'up'),
+    kcard('Avg Power (30d)',SK.avg_watts_30d,'W','kb',
+      SK.watts_change,
+      SK.watts_change!=null?`${SK.watts_change>0?'+':''}${SK.watts_change}W vs prior 60d`:null,
+      `Best avg: ${SK.best_power_w}W`,'up'),
+    kcard('Avg Ride Dist',SK.avg_ride_dist,'km','kp',null,
+      `Longest: ${SK.best_ride_dist} km`,SK.best_ride_name,'up'),
+    kcard('Running (30d)',SK.run_dist_30d,'km','kt',null,
+      `${SK.runs_30d} runs · avg ${SK.avg_run_pace} min/km`,
+      'Consistent base building','up'),
+    kcard('Strength (30d)',SK.strength_30d,'sessions','kg',null,
+      `Avg ${SK.strength_per_month_avg}/month`,
+      'Very consistent habit ✓','up'),
+    kcard('Avg Ride HR',SK.avg_hr_riding,'bpm','ky',null,
+      'Across all outdoor rides',
+      'Aerobic zone training','down'),
+  ].join('');
+}
+
+function round1(n){return Math.round(n*10)/10;}
+
+// ── Status panels ─────────────────────────────────────
+function renderStatus(){
+  const imp=[
+    {i:'💚',src:'watch ultra',t:'Resting HR declining',d:`Now ${HK.rhr_current} bpm · down ${Math.abs(HK.rhr_change_pct)}% vs prior 60d — reflects improving cardiac efficiency from consistent cycling base`},
+    {i:'🫁',src:'watch',t:'VO₂ Max climbing',d:`${f1(HK.vo2_current)} mL/kg/min — up from ${HK.vo2_prev} two months ago · "Excellent" classification for your age group`},
+    {i:'⚡',src:'strava',t:'Power meter consistency',d:`All 72 rides have power data — you can now track fitness precisely. ${SK.avg_watts_30d}W avg this month, best single ride ${SK.best_power_w}W`},
+    {i:'🏋️',src:'strava',t:'Exceptional strength habit',d:`${SK.strength_per_month_avg} sessions/month every month without fail — this consistency is rare and supports injury resilience on the bike`},
+    {i:'⚖️',src:'watch ultra',t:'Weight trending down',d:`${HK.weight_current} kg · lost ${Math.abs(round1(HK.weight_current-HK.weight_first))} kg since baseline — improving power-to-weight ratio for climbing`},
+  ];
+  const att=[
+    {i:'🩸',src:'watch',t:'SpO₂ averaging 95.9%',d:`Normal threshold is 96%+. Worth checking: hard training weeks, sleep position, or altitude exposure can push this down. Watch for dips below 94%`},
+    {i:'⚡',src:'strava',t:'Power slightly softening',d:`Avg watts down ${Math.abs(SK.watts_change)}W vs prior 60d. Could reflect accumulated fatigue — April was a big volume month (${DATA.monthly_cyc.find(m=>m.month==='2026-04')?.rides||0} rides). A recovery week may help`},
+    {i:'📊',src:'watch ultra',t:'No HRV in Apple Health',d:`Apple Watch captures HRV during sleep if worn — only 2 records found in your export. Enable sleep tracking on Watch or rely on Ultrahuman readiness scores`},
+    {i:'🌡️',src:'ultra',t:'Respiratory rate up slightly',d:`18.8 rpm recently vs 18.0 prior — minor but worth watching as an early overtraining or illness signal`},
+  ];
+  document.getElementById('imp').innerHTML=imp.map(x=>`<div class="si" data-src="${x.src}"><div class="si-icon">${x.i}</div><div><strong>${x.t}</strong><span>${x.d}</span></div></div>`).join('');
+  document.getElementById('att').innerHTML=att.map(x=>`<div class="si" data-src="${x.src}"><div class="si-icon">${x.i}</div><div><strong>${x.t}</strong><span>${x.d}</span></div></div>`).join('');
+}
+
+// ── Charts ────────────────────────────────────────────
+function renderCharts(d){
+  // Cycling weekly — bar+line combo
+  const wc=fd(DATA.weekly_cyc,d,'week');
+  const ctx=document.getElementById('cCyc');
+  if(ctx){
+    if(CH.cCyc)CH.cCyc.destroy();
+    CH.cCyc=new Chart(ctx,{type:'bar',data:{
+      labels:wc.map(x=>x.week.slice(5)),
+      datasets:[
+        {label:'Distance (km)',data:wc.map(x=>x.dist),backgroundColor:'#fb923c99',borderColor:'#fb923c',borderWidth:1,borderRadius:3,yAxisID:'y'},
+        {label:'Elevation (m)',data:wc.map(x=>x.elev),type:'line',borderColor:'#a78bfa',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.4,yAxisID:'y1'},
+      ]
+    },options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:300},
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:true,labels:{boxWidth:10,padding:14}},tooltip:tip},
+      scales:{
+        x:{grid:{display:false},ticks:{maxTicksLimit:14,maxRotation:0}},
+        y:{grid,title:{display:true,text:'km'},ticks:{maxTicksLimit:6}},
+        y1:{grid:{display:false},position:'right',title:{display:true,text:'m elev'},ticks:{maxTicksLimit:6}}
+      }
+    }});
+  }
+
+  // Power trend
+  const pt=fd(DATA.power_trend,d,'month');
+  line('cPow',pt.map(x=>x.month),[{
+    label:'Avg Watts',data:pt.map(x=>x.w),
+    borderColor:'#fbbf24',backgroundColor:'#fbbf2415',
+    borderWidth:2,pointRadius:3,tension:0.3,fill:true
+  }],80,180);
+
+  // Rides bubble — x=dist, y=watts, r=elev
+  const rf=fd(DATA.rides,d);
+  scatter('cRides',[{
+    data:rf.filter(r=>r.w).map(r=>({
+      x:r.dist,y:r.w||100,
+      r:Math.max(4,Math.min(20,r.elev/40)),
+      label:r.date,elev:r.elev,w:r.w
+    })),
+    backgroundColor:'#fb923c99',borderColor:'#fb923c'
+  }]);
+
+  // Running volume
+  const rm=fd(DATA.monthly_run,d,'month');
+  bar('cRun',rm.map(x=>x.month),[{
+    label:'km',data:rm.map(x=>x.dist),
+    backgroundColor:'#34d39988',borderColor:'#34d399',borderWidth:1,borderRadius:3
+  }]);
+
+  // Running pace
+  line('cPace',rm.map(x=>x.month),[{
+    label:'min/km',data:rm.map(x=>x.avg_pace),
+    borderColor:'#34d399',backgroundColor:'#34d39915',
+    borderWidth:2,pointRadius:3,tension:0.3,fill:true
+  }],4.5,8);
+
+  // Strength
+  const sm=fd(DATA.monthly_str,d,'month');
+  bar('cStr',sm.map(x=>x.month),[{
+    label:'sessions',data:sm.map(x=>x.sessions),
+    backgroundColor:'#a78bfa88',borderColor:'#a78bfa',borderWidth:1,borderRadius:3
+  }]);
+
+  // RHR
+  const rhr=fd(DATA.rhr_daily,d);
+  const rhrS=rhr.length>150?rhr.filter((_,i)=>i%Math.ceil(rhr.length/150)===0):rhr;
+  line('cRHR',rhrS.map(x=>x.date.slice(5)),[{
+    label:'bpm',data:rhrS.map(x=>x.v),
+    borderColor:'#4f8ef7',backgroundColor:'#4f8ef718',
+    borderWidth:1.5,pointRadius:0,tension:0.4,fill:true
+  }],35,75);
+
+  // VO2
+  const v2=fd(DATA.monthly_vo2,d,'month');
+  line('cVO2',v2.map(x=>x.month),[{
+    label:'mL/kg/min',data:v2.map(x=>x.avg),
+    borderColor:'#34d399',backgroundColor:'#34d39918',
+    borderWidth:2,pointRadius:3,tension:0.3,fill:true
+  }],42,56);
+
+  // Temp
+  const tmp=fd(DATA.body_temp,d);
+  const tmpS=tmp.length>150?tmp.filter((_,i)=>i%Math.ceil(tmp.length/150)===0):tmp;
+  line('cTemp',tmpS.map(x=>x.date.slice(5)),[{
+    label:'°C',data:tmpS.map(x=>x.v),
+    borderColor:'#a78bfa',backgroundColor:'#a78bfa12',
+    borderWidth:1.5,pointRadius:0,tension:0.4,fill:true
+  }],32,37);
+
+  // SpO2
+  const sp=fd(DATA.spo2_daily,d);
+  const spS=sp.length>150?sp.filter((_,i)=>i%Math.ceil(sp.length/150)===0):sp;
+  line('cSpO2',spS.map(x=>x.date.slice(5)),[{
+    label:'%',data:spS.map(x=>x.v),
+    borderColor:'#fbbf24',backgroundColor:'#fbbf2412',
+    borderWidth:1.5,pointRadius:0,tension:0.3,fill:true
+  }],85,100);
+
+  // Steps
+  const st=fd(DATA.monthly_steps,d,'month');
+  bar('cSteps',st.map(x=>x.month),[{
+    label:'avg steps/day',data:st.map(x=>x.avg),
+    backgroundColor:'#2dd4bf88',borderColor:'#2dd4bf',borderWidth:1,borderRadius:3
+  }]);
+
+  // Energy
+  const en=fd(DATA.monthly_energy,d,'month');
+  bar('cEnergy',en.map(x=>x.month),[{
+    label:'avg kcal/day',data:en.map(x=>x.avg),
+    backgroundColor:'#f8717188',borderColor:'#f87171',borderWidth:1,borderRadius:3
+  }]);
+}
+
+// ── Filter buttons ────────────────────────────────────
+document.querySelectorAll('.fb').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.fb').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    days=parseInt(b.dataset.d);
+    renderCharts(days);
+  });
+});
+
+// ── Source badge filtering ──────────────────────────────
+const SRC_INFO = {
+  watch: {
+    label: '⌚ Apple Watch Ultra',
+    color: 'var(--blue)',
+    metrics: [
+      'VO₂ Max — cardiorespiratory fitness estimate',
+      'Blood Oxygen (SpO₂) — daily average',
+      'Resting Heart Rate — when Ultrahuman unavailable',
+      'Active Energy Burned',
+    ]
+  },
+  ultra: {
+    label: '💍 Ultrahuman Ring',
+    color: 'var(--purple)',
+    metrics: [
+      'Resting Heart Rate — preferred source (ring = more accurate at rest)',
+      'Nightly Body Temperature — recovery & wellness signal',
+      'Daily Steps — ring pedometer',
+    ]
+  },
+  strava: {
+    label: '🚴 Strava + Magene',
+    color: 'var(--orange)',
+    metrics: [
+      'All cycling — distance, elevation, weekly load',
+      'Power output — Magene power meter via Strava',
+      'Running — distance, pace, heart rate',
+      'Strength & gym sessions',
+      'All training KPIs and ride details',
+    ]
+  }
+};
+
+let activeSrcs = new Set();
+
+function applySourceFilter() {
+  const none = activeSrcs.size === 0;
+
+  // Chart cards and sections with data-src
+  document.querySelectorAll('[data-src]').forEach(el => {
+    if (none) {
+      el.classList.remove('src-hidden', 'src-visible');
+      return;
+    }
+    const srcs = el.getAttribute('data-src').split(' ');
+    const show = srcs.some(s => activeSrcs.has(s));
+    el.classList.toggle('src-hidden', !show);
+    el.classList.toggle('src-visible', show);
+  });
+
+  // Health KPI grid — filter individual cards
+  document.querySelectorAll('#hkpis .kcard[data-src]').forEach(card => {
+    if (none) { card.classList.remove('src-hidden','src-visible'); return; }
+    const srcs = card.getAttribute('data-src').split(' ');
+    const show = srcs.some(s => activeSrcs.has(s));
+    card.classList.toggle('src-hidden', !show);
+    card.classList.toggle('src-visible', show);
+  });
+
+  // Insights — show/hide relevant items
+  if (!none) {
+    document.querySelectorAll('.si[data-src]').forEach(item => {
+      const srcs = item.getAttribute('data-src').split(' ');
+      const show = srcs.some(s => activeSrcs.has(s));
+      item.style.display = show ? '' : 'none';
+    });
+  } else {
+    document.querySelectorAll('.si[data-src]').forEach(item => {
+      item.style.display = '';
+    });
+  }
+}
+
+function showSrcPopover(btn, srcKey) {
+  const info = document.getElementById('srcInfo');
+  const data = SRC_INFO[srcKey];
+  if (!data) return;
+
+  // If clicking same source and popover is already showing for it, just hide
+  if (info.dataset.current === srcKey && info.style.display !== 'none') {
+    info.style.display = 'none';
+    info.dataset.current = '';
+    return;
+  }
+
+  info.dataset.current = srcKey;
+  info.innerHTML = `
+    <div style="font-weight:600;margin-bottom:10px;color:${data.color}">${data.label}</div>
+    <div style="color:#8892b0;font-size:11px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Derived metrics</div>
+    ${data.metrics.map(m => `<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;">
+      <span style="color:${data.color};margin-top:1px">◆</span>
+      <span style="color:#c8d0e0;line-height:1.4">${m}</span>
+    </div>`).join('')}
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid #2a2d3e;color:#4a5270;font-size:10px;">
+      ${activeSrcs.has(srcKey) ? '✓ Currently filtering to this source' : 'Click badge to filter dashboard'}
+    </div>`;
+  info.style.display = 'block';
+
+  // Position near badge
+  const headerRect = document.querySelector('header').getBoundingClientRect();
+  const btnRect = btn.getBoundingClientRect();
+  info.style.right = '24px';
+  info.style.top = (btnRect.bottom - headerRect.top + 8) + 'px';
+
+  // Close when clicking outside
+  setTimeout(() => {
+    const close = (e) => {
+      if (!info.contains(e.target) && e.target !== btn) {
+        info.style.display = 'none';
+        info.dataset.current = '';
+        document.removeEventListener('click', close);
+      }
+    };
+    document.addEventListener('click', close);
+  }, 0);
+}
+
+document.querySelectorAll('.badge[data-src]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const src = btn.dataset.src;
+
+    // Toggle active state
+    if (activeSrcs.has(src)) {
+      activeSrcs.delete(src);
+      btn.classList.remove('active');
+    } else {
+      activeSrcs.add(src);
+      btn.classList.add('active');
+    }
+
+    // Show popover with info
+    showSrcPopover(btn, src);
+
+    applySourceFilter();
+  });
+});
+
+renderKPIs();
+renderStatus();
+renderCharts(days);
+</script></body></html>
